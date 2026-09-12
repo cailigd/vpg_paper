@@ -1,10 +1,7 @@
 # GF-VPG numerical experiments
 
-Numerical validation of the GF-VPG framework (v3.7.3) for multilocus population
-genetics. Deterministic VPG dynamics — single-state SVPG and dual-state DVPG
-(bivariate formulation with coupling flux J_c = gamma (rho - g)) — and its
-stochastic Langevin extension are compared against SLiM Wright–Fisher
-simulations.
+This repository contains the code for the numerical experiments conducted in the
+paper *"A Variational Modeling Framework for Population Genetic Dynamics"*.
 
 Package version: **v3.3** (2026-09-12).
 
