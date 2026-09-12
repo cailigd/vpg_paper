@@ -30,7 +30,6 @@ Each experiment directory contains:
 | `README.md` | Per-experiment details: file purposes and how to run |
 
 Root files: `requirements.txt` (numpy, matplotlib), `.gitignore`.
-The LaTeX experiment reports (`report_exp*.tex` / `.pdf`) are **not** included.
 
 ## Running
 
@@ -52,5 +51,5 @@ python3 run_slim_exp1.py 100           # regenerate the SLiM data (needs SLiM 4.
   in this repository (100 reps; SLiM seeds 1000 + 7i, Langevin seeds 1000 + i).
 * Paper figures need Arial (`ttf-mscorefonts-installer`); the summary figures in
   `figs/` are labelled in Chinese and need a CJK font (e.g. Noto Sans CJK SC).
-* `figs/*.png` reproduce the figures of the experiment reports; `fig_exp*.png|pdf`
+* `figs/*.png` are the summary figures of each experiment; `fig_exp*.png|pdf`
   are the integration panels used in the paper.
