@@ -1,8 +1,6 @@
 This repository contains the code for the numerical experiments conducted in the
 paper *"A Variational Modeling Framework for Population Genetic Dynamics"*.
 
-Package version: **v3.3** (2026-09-12).
-
 ## Experiments
 
 | Directory | Model | Parameters | Simulation setup |
