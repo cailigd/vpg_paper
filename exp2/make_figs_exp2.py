@@ -62,7 +62,7 @@ t_sv = np.arange(len(det[(0.001, 0.005)]['ps'])) * dt
 t_dv = np.arange(len(det[(0.001, 0.005)]['rs_dv'])) * dt
 t_dv_half = t_dv / 2.0
 
-# ============ Figure 1 (first figure in the report): haplotype frequency trajectories (2×2 grid r×s) ============
+# ============ Figure 1: haplotype frequency trajectories (2x2 grid r x s) ============
 # Show the dynamics of the 4 haplotypes: favorable combination 11 is maintained/enriched, neutral 00 is diluted, recombinant 01/10 rise then fall
 # Line styles: SVPG thin light solid / DVPG thick dashed (distinguishable when overlapping) / SLiM dotted mean±SE
 fig, axes = plt.subplots(2, 2, figsize=(14, 10), sharex=True, sharey=True)
@@ -98,7 +98,7 @@ plt.tight_layout(rect=(0, 0, 1, 0.97))
 plt.savefig(f'{FIG}/exp2_figC_hap.png', dpi=150, bbox_inches='tight'); plt.close()
 print("Figure 1 (hap) saved")
 
-# ============ Figure 2 (second figure in the report): AF trajectories (2×2 grid) ============
+# ============ Figure 2: AF trajectories (2x2 grid) ============
 fig, axes = plt.subplots(2, 2, figsize=(12, 9), sharex=True, sharey=True)
 for i, r in enumerate(rs):
     for j, s in enumerate(ss):
@@ -129,7 +129,7 @@ plt.tight_layout(rect=(0, 0, 1, 0.97))
 plt.savefig(f'{FIG}/exp2_figA_AF.png', dpi=150, bbox_inches='tight'); plt.close()
 print("Figure 2 (AF) saved")
 
-# ============ Figure 3 (third figure in the report): D12(t) LD trajectories (2×2 grid) ============
+# ============ Figure 3: D12(t) LD trajectories (2x2 grid) ============
 fig, axes = plt.subplots(2, 2, figsize=(12, 9), sharex=True, sharey=True)
 for i, r in enumerate(rs):
     for j, s in enumerate(ss):

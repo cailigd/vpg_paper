@@ -178,7 +178,7 @@ for mu in [1e-3, 3e-3]:
     print(f"μ={mu:g} s=0.01 p0=0.99 {d['peq']:10.4f}{slim['mean'][-1]:10.4f}"
           f"{slim['se'][-1]:8.4f}{slim['reps'][:,-1].std():12.4f}")
 
-# ============ Appendix: half-speed factor validation (for report) ============
+# ============ Appendix: half-speed factor validation ============
 ps = det[(1e-3, 0.01)]['ps']
 r1 = det[(1e-3, 0.01)]['r1']
 idx = np.arange(0, len(ps), 500)
