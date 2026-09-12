@@ -1,0 +1,102 @@
+// SLiM 4.2 — L=3 three-locus integrated model: mutation + recombination + selection
+// Experiment 3 (core experiment of the paper)
+// Usage: slim -s SEED -d NE=... -d R12=... -d R23=... 
+//            -d MU=... -d S1=... -d S2=... -d S3=...
+//            -d H0=... ... -d H7=... -d TMAX=... -d OUTFILE='...' script.slim
+// Convention: haplotype h = sum_l 2^l * b_l (site0 = locus 0 LSB, site1, site2 MSB)
+//   mutation presence (parity) determines the allele: position 0→m1, position 1→m2, position 2→m3
+// Site-specific selection: 
+//   m1 (position 0, beneficial): selectionCoeff = S1 = 2*s1  (marginal s1 per copy)
+//   m2 (position 1, neutral): selectionCoeff = S2 = 2*s2 (=0)
+//   m3 (position 2, deleterious): selectionCoeff = S3 = 2*s3
+//   Diploid dominance h=0.5 (additive), marginal effect per copy S/2 = s_l, matches VPG haploid s
+// Mutation: bidirectional, each gamete flips at each position with probability MU (0<->1), parity tracked in modifyChild
+// Recombination: two intervals initializeRecombinationRate(c(R12, R23), c(1, 2))
+// Output: one line "gen\tp000\t...\tp111" every REC_EVERY generations (8 haplotype frequencies)
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeMutationRate(0.0);
+    initializeMutationType("m1", 0.5, "f", S1);   // locus 0 beneficial
+    initializeMutationType("m2", 0.5, "f", S2);   // locus 1 neutral
+    initializeMutationType("m3", 0.5, "f", S3);   // locus 2 deleterious
+    m1.convertToSubstitution = F;
+    m2.convertToSubstitution = F;
+    m3.convertToSubstitution = F;
+    initializeGenomicElementType("g1", c(m1, m2, m3), c(1.0, 1.0, 1.0));
+    initializeGenomicElement(g1, 0, 2);           // loci 0,1,2
+    initializeRecombinationRate(c(R12, R23), c(1, 2));  // intervals 0-1, 1-2
+    defineConstant("REC_EVERY", 10);
+    defineConstant("MASKS", c(1, 2, 4));          // position -> mask
+    defineConstant("COUNT", c(H0, H1, H2, H3, H4, H5, H6, H7));
+}
+
+1 early() {
+    sim.addSubpop("p1", NE);
+    g = p1.genomes;
+    idx = 0;
+    for (h in 0:7) {
+        cnt = COUNT[h];
+        for (i in seqLen(cnt)) {
+            for (s in 0:2) {
+                if (integerMod(integerDiv(h, asInteger(2^s)), 2) == 1) {
+                    if (s == 0) g[idx].addNewMutation(m1, S1, 0);
+                    if (s == 1) g[idx].addNewMutation(m2, S2, 1);
+                    if (s == 2) g[idx].addNewMutation(m3, S3, 2);
+                }
+            }
+            idx = idx + 1;
+        }
+    }
+    if (idx != size(g))
+        stop("count sum != 2*NE");
+    write_haps(0);
+}
+
+// Bidirectional mutation: each gamete flips at each locus with probability MU (0<->1), tracked by parity
+1:TMAX modifyChild(p1) {
+    for (genome in child.genomes) {
+        for (s in 0:2) {
+            if (runif(1) < MU) {
+                // current allele state: parity of the number of mutations at this position
+                state = 0;
+                for (m in genome.mutations)
+                    if (asInteger(m.position) == s)
+                        state = state + 1;
+                if (state % 2 == 1) {
+                    for (m in genome.mutations)
+                        if (asInteger(m.position) == s)
+                            genome.removeMutations(m);
+                } else {
+                    if (s == 0) genome.addNewDrawnMutation(m1, 0);
+                    if (s == 1) genome.addNewDrawnMutation(m2, 1);
+                    if (s == 2) genome.addNewDrawnMutation(m3, 2);
+                }
+            }
+        }
+    }
+    return T;
+}
+
+function (void) write_haps(integer$ gen) {
+    cts = rep(0.0, 8);
+    for (ind in p1.individuals) {
+        for (gg in ind.genomes) {
+            h = 0;
+            for (m in gg.mutations) {
+                if (asInteger(m.position) <= 2)
+                    h = h + MASKS[asInteger(m.position)];
+            }
+            cts[h] = cts[h] + 1;
+        }
+    }
+    hf = cts / (2 * NE);
+    line = gen + "";
+    for (k in 0:7)
+        line = line + "\t" + format("%.6f", hf[k]);
+    writeFile(OUTFILE, line, append=T);
+}
+
+1:TMAX late() {
+    if (community.tick % REC_EVERY == 0)
+        write_haps(community.tick);
+}

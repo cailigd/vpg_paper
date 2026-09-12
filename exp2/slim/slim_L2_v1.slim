@@ -1,0 +1,74 @@
+// SLiM 4.2 — L=2 two loci, no mutation, selection on site 1, recombination
+// Experiment 2: two-locus recombination-selection model (Mutation=0, drift arises naturally from finite Ne)
+// Usage: slim -s SEED -d NE=... -d R=... -d S=... 
+//            -d H0=... -d H1=... -d H2=... -d H3=... -d TMAX=... -d OUTFILE='...' script.slim
+// Convention: haplotype h = b0 + 2*b1 (site0=locus 0 LSB, site1=locus 1 MSB)
+//   h=0 '00', h=1 '01'(site0=1), h=2 '10'(site1=1), h=3 '11'
+//   Presence (parity) in genome.mutations determines the state: m2 at position 0 → site0=1; m1 at position 1 → site1=1
+// Selection: acts only on site 1. m1 selectionCoeff = S = 2*s (marginal effect s per copy, matching VPG haploid s)
+//       site 0 uses neutral type m2 (selectionCoeff=0)
+// Recombination: single interval initializeRecombinationRate(R, c(1))
+// Mutation: disabled (initializeMutationRate(0.0), modifyChild makes no mutations)
+// Output: one line per REC_EVERY generations "gen\tp00\tp01\tp10\tp11"
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeMutationRate(0.0);
+    initializeMutationType("m1", 0.5, "f", S);   // site 1 selected allele
+    initializeMutationType("m2", 0.5, "f", 0.0); // site 0 neutral allele
+    m1.convertToSubstitution = F;
+    m2.convertToSubstitution = F;
+    initializeGenomicElementType("g1", c(m1, m2), c(1.0, 1.0));
+    initializeGenomicElement(g1, 0, 1);          // loci 0,1
+    initializeRecombinationRate(R, c(1));        // single interval 0-1
+    defineConstant("REC_EVERY", 10);
+    defineConstant("COUNT", c(H0, H1, H2, H3));  // initial counts of the 4 haplotypes
+}
+
+1 early() {
+    sim.addSubpop("p1", NE);
+    g = p1.genomes;
+    idx = 0;
+    for (h in 0:3) {
+        cnt = COUNT[h];
+        for (i in seqLen(cnt)) {
+            // site0 (position 0): use m2
+            if (integerMod(h, 2) == 1)
+                g[idx].addNewMutation(m2, 0.0, 0);
+            // site1 (position 1): use m1
+            if (integerDiv(h, 2) == 1)
+                g[idx].addNewMutation(m1, S, 1);
+            idx = idx + 1;
+        }
+    }
+    if (idx != size(g))
+        stop("count sum != 2*NE");
+    write_haps(0);
+}
+
+// No mutation: modifyChild only returns T and makes no modifications
+
+function (void) write_haps(integer$ gen) {
+    cts = rep(0.0, 4);
+    for (ind in p1.individuals) {
+        for (gg in ind.genomes) {
+            h = 0;
+            for (m in gg.mutations) {
+                if (asInteger(m.position) == 0)
+                    h = h + 1;
+                if (asInteger(m.position) == 1)
+                    h = h + 2;
+            }
+            cts[h] = cts[h] + 1;
+        }
+    }
+    hf = cts / (2 * NE);
+    line = gen + "";
+    for (k in 0:3)
+        line = line + "\t" + format("%.6f", hf[k]);
+    writeFile(OUTFILE, line, append=T);
+}
+
+1:TMAX late() {
+    if (community.tick % REC_EVERY == 0)
+        write_haps(community.tick);
+}

@@ -1,0 +1,74 @@
+// SLiM 4.2 — GPT nucleotide approach (Experiment 2)
+// Two-locus nucleotide-based model: site0 neutral, site1 selected
+// Fitness computed entirely from the actual nucleotide state → no object-identity spurious effect
+// Interface: NE, R, S (homozygote selection coefficient, S=2s), H0-H3, TMAX, OUTFILE
+// Haplotype encoding: h=0:00, h=1:01 (site0=1), h=2:10 (site1=1), h=3:11
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeSLiMOptions(nucleotideBased=T);
+    initializeAncestralNucleotides("AA");   // both loci are ancestrally A = allele 0
+    initializeMutationTypeNuc("m0", 0.5, "f", 0.0);   // all nucleotide mutations neutral
+    m0.convertToSubstitution = F;
+    // No new mutations: mmJukesCantor(0.0) → all-zero mutation matrix
+    initializeGenomicElementType("g1", m0, 1.0, mmJukesCantor(0.0));
+    initializeGenomicElement(g1, 0, 1);
+    initializeRecombinationRate(R, c(1));
+    defineConstant("REC_EVERY", 10);
+    defineConstant("COUNT", c(H0, H1, H2, H3));
+}
+1 early() {
+    sim.addSubpop("p1", NE);
+    g = p1.genomes;
+    idx = 0;
+    for (h in 0:3) {
+        cnt = COUNT[h];
+        for (i in seqLen(cnt)) {
+            if (integerMod(h, 2) == 1)
+                g[idx].addNewMutation(m0, 0.0, 0, NULL, "G");   // site0: A->G
+            if (integerDiv(h, 2) == 1)
+                g[idx].addNewMutation(m0, 0.0, 1, NULL, "G");   // site1: A->G
+            idx = idx + 1;
+        }
+    }
+    if (idx != size(g))
+        stop("count sum != 2*NE");
+    write_haps(0);
+}
+// Selection: only the nucleotide state of site1 matters (G=2)
+// Note: in this build the callback is named fitnessEffect(), with the implicit variable individual
+fitnessEffect() {
+    n1 = 0;
+    if (individual.genome1.nucleotides(1, 1, "integer")[0] == 2)
+        n1 = n1 + 1;
+    if (individual.genome2.nucleotides(1, 1, "integer")[0] == 2)
+        n1 = n1 + 1;
+    if (n1 == 0)
+        return 1.0;
+    if (n1 == 1)
+        return 1.0 + S / 2.0;
+    return 1.0 + S;
+}
+function (void) write_haps(integer$ gen) {
+    cts = rep(0.0, 4);
+    for (ind in p1.individuals) {
+        for (gg in ind.genomes) {
+            n0 = gg.nucleotides(0, 0, "integer")[0];   // A=0, C=1, G=2, T=3
+            n1 = gg.nucleotides(1, 1, "integer")[0];
+            h = 0;
+            if (n0 == 2)
+                h = h + 1;
+            if (n1 == 2)
+                h = h + 2;
+            cts[h] = cts[h] + 1;
+        }
+    }
+    hf = cts / (2.0 * NE);
+    line = gen + "";
+    for (k in 0:3)
+        line = line + "\t" + format("%.6f", hf[k]);
+    writeFile(OUTFILE, line, append=T);
+}
+1:TMAX late() {
+    if (community.tick % REC_EVERY == 0)
+        write_haps(community.tick);
+}

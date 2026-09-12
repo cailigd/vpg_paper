@@ -1,0 +1,64 @@
+// SLiM 4.2 — L=1 single locus, bidirectional mutation, additive selection, no recombination
+// Experiment 1: single-locus mutation-selection balance (Mutation + Selection)
+// Usage: slim -s SEED -d NE=... -d U=... -d V=... -d S=... 
+//            -d N_A1=... -d TMAX=... -d OUTFILE='...' script.slim
+// Convention: haplotype state is determined by mutation-count parity at position 0: odd=1 (derived), even=0
+// Additive selection: m1 dominance h=0.5, selectionCoeff = S = 2*s_vpg
+//   (SLiM diploid per-copy marginal effect S/2 = s_vpg, matching the VPG haploid s)
+// Mutation: 0->1 at rate U, 1->0 at rate V (bidirectional, manually flipped in modifyChild)
+// Output: one line "gen\tp" every REC_EVERY generations (p = AF(A1) = count(A1)/(2Ne))
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeMutationRate(0.0);
+    initializeMutationType("m1", 0.5, "f", S);   // S = 2*s, additive
+    m1.convertToSubstitution = F;   // Critical fix: prevent fixed mutations from being auto-removed
+    initializeGenomicElementType("g1", m1, 1.0);
+    initializeGenomicElement(g1, 0, 0);          // single locus at position 0
+    initializeRecombinationRate(0.0);            // no recombination in Experiment 1
+    defineConstant("REC_EVERY", 10);
+    defineConstant("N_A1_0", N_A1);              // initial A1 copy count
+}
+
+1 early() {
+    sim.addSubpop("p1", NE);
+    g = p1.genomes;
+    // Exact injection: the first N_A1_0 genomes carry the m1 mutation (A1), the rest are A0
+    for (i in seqLen(size(g))) {
+        if (i < N_A1_0)
+            g[i].addNewMutation(m1, S, 0);
+    }
+    write_p(0);
+}
+
+// Bidirectional mutation: each gamete flips 0->1 at position 0 with probability U, and 1->0 with probability V
+1:TMAX modifyChild(p1) {
+    for (genome in child.genomes) {
+        state = size(genome.mutations) % 2;      // parity: odd=1
+        if (state == 0) {
+            if (runif(1) < U)
+                genome.addNewDrawnMutation(m1, 0);
+        } else {
+            if (runif(1) < V) {
+                for (m in genome.mutations)
+                    genome.removeMutations(m);
+            }
+        }
+    }
+    return T;
+}
+
+function (void) write_p(integer$ gen) {
+    n1 = 0;
+    for (ind in p1.individuals)
+        for (gg in ind.genomes)
+            if (size(gg.mutations) % 2 == 1)
+                n1 = n1 + 1;
+    p = n1 / (2 * NE);
+    line = gen + "\t" + format("%.6f", p);
+    writeFile(OUTFILE, line, append=T);
+}
+
+1:TMAX late() {
+    if (community.tick % REC_EVERY == 0)
+        write_p(community.tick);
+}
