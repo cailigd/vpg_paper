@@ -1,5 +1,3 @@
-# GF-VPG numerical experiments
-
 This repository contains the code for the numerical experiments conducted in the
 paper *"A Variational Modeling Framework for Population Genetic Dynamics"*.
 
@@ -56,9 +54,3 @@ python3 run_slim_exp1.py 100           # regenerate the SLiM data (needs SLiM 4.
   `figs/` are labelled in Chinese and need a CJK font (e.g. Noto Sans CJK SC).
 * `figs/*.png` reproduce the figures of the experiment reports; `fig_exp*.png|pdf`
   are the integration panels used in the paper.
-
-## Figure conventions (shared by exp1/2/3)
-
-SVPG solid line; DVPG dashed (its time axis is drawn at half speed, t/2); SLiM
-dotted line with a mean ± SE band. Panels D/E/F of `fig_exp3` compare SLiM
-(dotted) with VPG (solid) for the three Ne pairs.
