@@ -29,6 +29,14 @@ Each experiment directory contains:
 
 Root files: `requirements.txt` (numpy, matplotlib), `.gitignore`.
 
+## Requirements
+
+* **SLiM 4.2** — required to re-run the simulations (the figure scripts do not
+  need it). Download and install it from <https://messerlab.org/slim/>.
+* Python 3 with `numpy` and `matplotlib`: `pip install -r requirements.txt`.
+* Arial (`ttf-mscorefonts-installer`) for the paper panels; a CJK font
+  (e.g. Noto Sans CJK SC) for the summary figures in `figs/`.
+
 ## Running
 
 ```bash
@@ -36,18 +44,17 @@ pip install -r requirements.txt        # numpy, matplotlib
 cd exp1
 python3 make_fig_exp1_arial.py         # paper integration panel -> fig_exp1.png / .pdf
 python3 make_figs_exp1.py              # summary figures -> figs/
-python3 run_slim_exp1.py 100           # regenerate the SLiM data (needs SLiM 4.2)
+python3 run_slim_exp1.py 100           # regenerate the SLiM data (SLiM 4.2 required)
 ```
 
 * All scripts resolve their paths relative to their own directory, so they run
   from any working directory and straight after `git clone`.
-* SLiM runners take the binary from the `SLIM_BIN` environment variable,
-  falling back to `/usr/local/bin/slim`.
+* The SLiM runners locate the SLiM 4.2 binary through the `SLIM_BIN` environment
+  variable and fall back to `/usr/local/bin/slim`; set it if SLiM is installed
+  elsewhere, e.g. `SLIM_BIN=~/slim/bin/slim python3 run_slim_exp1.py 100`.
 * Runners skip a group whose `.npy` output already exists — delete the file to
   recompute it.
 * Reproducibility: every shipped data file is reproduced exactly by the runners
   in this repository (100 reps; SLiM seeds 1000 + 7i, Langevin seeds 1000 + i).
-* Paper figures need Arial (`ttf-mscorefonts-installer`); the summary figures in
-  `figs/` are labelled in Chinese and need a CJK font (e.g. Noto Sans CJK SC).
 * `figs/*.png` are the summary figures of each experiment; `fig_exp*.png|pdf`
   are the integration panels used in the paper.
